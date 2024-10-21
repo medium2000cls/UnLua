@@ -271,38 +271,47 @@ public class Lua : ModuleRules
 
         Console.WriteLine("generating {0} library with cmake...", m_LuaDirName);
 
-        var osPlatform = Environment.OSVersion.Platform;
-        if (osPlatform == PlatformID.Win32NT)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                WorkingDirectory = ModuleDirectory,
-                RedirectStandardInput = true,
-                UseShellExecute = false
-            };
-            var process = Process.Start(startInfo);
-            using (var writer = process.StandardInput)
-            {
-                var buildDir = string.Format("\"{0}/build\"", m_LuaDirName);
-                writer.WriteLine("rmdir /s /q {0} &mkdir {0} &pushd {0}", buildDir);
-                if (string.IsNullOrEmpty(m_BuildSystem))
-                    writer.Write("cmake ../.. ");
-                else
-                    writer.Write("cmake -G \"{0}\" ../.. ", m_BuildSystem);
-                var args = new Dictionary<string, string>
+		var osPlatform = Environment.OSVersion.Platform;
+		if (osPlatform == PlatformID.Win32NT)
+		{
+			var startInfo = new ProcessStartInfo
+			{
+				FileName = "cmd.exe",
+				WorkingDirectory = ModuleDirectory,
+				RedirectStandardInput = true,
+				UseShellExecute = false
+			};
+			var process = Process.Start(startInfo);
+			using (var writer = process.StandardInput)
+			// using (var reader = process.StandardOutput)
+			{
+				var buildDir = string.Format("\"{0}/build\"", m_LuaDirName);
+				writer.WriteLine("rmdir /s /q {0} &mkdir {0} &pushd {0}", buildDir);
+				
+                string searchDirectory = @"C:\Program Files (x86)\Microsoft Visual Studio";
+                string[] vsDevCmdPaths = Directory.GetFiles(searchDirectory, "VsDevCmd.bat", SearchOption.AllDirectories);
+                if (vsDevCmdPaths.Length > 0)
                 {
-                    { "LUA_VERSION", m_LuaVersion },
-                    { "LUA_COMPILE_AS_CPP", m_CompileAsCpp ? "1" : "0" },
-                };
-                foreach (var arg in args)
-                    writer.Write(" -D{0}=\"{1}\"", arg.Key, arg.Value);
-                foreach (var arg in extraArgs)
-                    writer.Write(" -D{0}=\"{1}\"", arg.Key, arg.Value);
-                writer.WriteLine();
-                writer.WriteLine("popd");
-                writer.WriteLine("cmake --build {0}/build --config {1}", m_LuaDirName, m_Config);
-            }
+                    writer.WriteLine("\"{0}\"", vsDevCmdPaths);
+                }
+
+				if (string.IsNullOrEmpty(m_BuildSystem))
+					writer.Write("cmake ../.. ");
+				else
+					writer.Write("cmake -G \"{0}\" ../.. ", m_BuildSystem);
+				var args = new Dictionary<string, string>
+				{
+					{ "LUA_VERSION", m_LuaVersion },
+					{ "LUA_COMPILE_AS_CPP", m_CompileAsCpp ? "1" : "0" },
+				};
+				foreach (var arg in args)
+					writer.Write(" -D{0}=\"{1}\"", arg.Key, arg.Value);
+				foreach (var arg in extraArgs)
+					writer.Write(" -D{0}=\"{1}\"", arg.Key, arg.Value);
+				writer.WriteLine();
+				writer.WriteLine("popd");
+				writer.WriteLine("cmake --build {0}/build --config {1}", m_LuaDirName, m_Config);
+			}
 
             process.WaitForExit();
 

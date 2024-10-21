@@ -80,6 +80,7 @@ public class UnLuaEditor : ModuleRules
                 "Sockets",
                 "UnLua",
                 "Lua",
+                "Cffilua",
                 "ToolMenus"
             }
         );

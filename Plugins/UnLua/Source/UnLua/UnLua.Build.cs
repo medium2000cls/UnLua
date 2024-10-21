@@ -53,7 +53,8 @@ public class UnLua : ModuleRules
                 "Engine",
                 "Slate",
                 "InputCore",
-                "Lua"
+                "Lua", 
+                "Cffilua"
             }
         );
 
